@@ -1,0 +1,6 @@
+{
+  "name": "el fakhir artisanal - Copper Bracelet E-Commerce",
+  "description": "High-converting, dual-language (Arabic & French) e-commerce application for the Algerian market selling the el fakhir artisanal Magnetic Copper Bracelet with local delivery and seller admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

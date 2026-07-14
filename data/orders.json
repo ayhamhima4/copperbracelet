@@ -1,0 +1,50 @@
+[
+  {
+    "id": "DZ-79437",
+    "timestamp": "2026-07-12T02:30:05.534Z",
+    "customerName": "hguyg",
+    "phoneNumber": "0795959595",
+    "wilayaCode": 19,
+    "wilayaNameAr": "سطيف",
+    "wilayaNameFr": "Sétif",
+    "address": "KJLRHGIU",
+    "shippingCompany": "Yalidine Express",
+    "shippingType": "Home",
+    "shippingFee": 600,
+    "productPrice": 1990,
+    "totalPrice": 2590,
+    "status": "Pending"
+  },
+  {
+    "id": "DZ-95180",
+    "timestamp": "2026-07-11T22:47:18.326Z",
+    "customerName": "TKJHOKMJT",
+    "phoneNumber": "0739437474",
+    "wilayaCode": 16,
+    "wilayaNameAr": "الجزائر العاصمة",
+    "wilayaNameFr": "Alger",
+    "address": "HUIOHRGH4783HRG",
+    "shippingCompany": "Yalidine Express",
+    "shippingType": "Home",
+    "shippingFee": 400,
+    "productPrice": 1990,
+    "totalPrice": 2390,
+    "status": "Pending"
+  },
+  {
+    "id": "DZ-64470",
+    "timestamp": "2026-07-11T22:46:33.079Z",
+    "customerName": "uqhbfiu",
+    "phoneNumber": "0734567890",
+    "wilayaCode": 16,
+    "wilayaNameAr": "الجزائر العاصمة",
+    "wilayaNameFr": "Alger",
+    "address": "jhbfnbjkqetn",
+    "shippingCompany": "Yalidine Express",
+    "shippingType": "Home",
+    "shippingFee": 400,
+    "productPrice": 1990,
+    "totalPrice": 2390,
+    "status": "Pending"
+  }
+]
