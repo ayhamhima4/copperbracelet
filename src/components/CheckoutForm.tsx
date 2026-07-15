@@ -130,7 +130,7 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
     };
 
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbxHJg9tOCaqqdy3-3bC1IGVpfwlefMQgUFEMmmQFPx3h3H-8aVJhRhLFm5hBRAsc6o/exec', {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbx3k8Ds5k64uGC4XW9fhkiMlLrGVumjPkrGdjV05vhMs2egoWCOh_AKtcalp1v56zU/exec', {
         method: 'POST',
         mode: 'no-cors', 
         headers: {
