@@ -4,6 +4,25 @@ import { TRANSLATIONS } from '../translations';
 import { Order, Wilaya } from '../types';
 import { ShoppingBag, Truck, User, Phone, MapPin, Building, ChevronDown, CheckCircle2, Package2 } from 'lucide-react';
 
+// 1. قاعدة بيانات البلديات (مثال لولايتي سطيف والجزائر العاصمة)
+const COMMUNES_BY_WILAYA: { [key: number]: { id: number; nameAr: string; nameFr: string }[] } = {
+  19: [ // ولاية سطيف
+    { id: 1, nameAr: "سطيف", nameFr: "Sétif" },
+    { id: 2, nameAr: "العلمة", nameFr: "El Eulma" },
+    { id: 3, nameAr: "عين أرنات", nameFr: "Ain Arnat" },
+    { id: 4, nameAr: "عين ولمان", nameFr: "Ain Oulmene" },
+    { id: 5, nameAr: "عين التبينت", nameFr: "Ain Tebinet" },
+    { id: 6, nameAr: "بوقاعة", nameFr: "Bougaa" }
+  ],
+  16: [ // ولاية الجزائر
+    { id: 10, nameAr: "الجزائر الوسطى", nameFr: "Alger Centre" },
+    { id: 11, nameAr: "باب الزوار", nameFr: "Bab Ezzouar" },
+    { id: 12, nameAr: "الحراش", nameFr: "El Harrach" },
+    { id: 13, nameAr: "الشراقة", nameFr: "Cheraga" },
+    { id: 14, nameAr: "بئر مراد رايس", nameFr: "Bir Mourad Rais" }
+  ]
+};
+
 interface CheckoutFormProps {
   lang: 'ar' | 'fr';
   onOrderSuccess: (order: Order) => void;
@@ -16,6 +35,7 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
   const [customerName, setCustomerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedWilayaCode, setSelectedWilayaCode] = useState<number>(16); // Default: Alger
+  const [selectedCommune, setSelectedCommune] = useState<string>(''); // 2. متغير البلدية المختارة
   const [shippingCompany, setShippingCompany] = useState<'Yalidine Express' | 'ZR Express'>('Yalidine Express');
   const [shippingType, setShippingType] = useState<'Home' | 'Office'>('Home');
   const [address, setAddress] = useState('');
@@ -32,11 +52,23 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
   const unitPrice = 1990; // Stated 1990 DA discount price
   const subtotal = unitPrice * quantity;
 
+  // الحصول على البلديات الخاصة بالولاية المختارة حالياً
+  const currentCommunes = COMMUNES_BY_WILAYA[selectedWilayaCode] || [];
+
   // Update shipping fee when wilaya, shipping company, or shipping type changes
   useEffect(() => {
     const wil = WILAYAS.find(w => w.code === Number(selectedWilayaCode));
     if (wil) {
       setSelectedWilaya(wil);
+      
+      // 3. تعيين البلدية الأولى تلقائياً كبلدية افتراضية عند تغيير الولاية
+      const communes = COMMUNES_BY_WILAYA[Number(selectedWilayaCode)] || [];
+      if (communes.length > 0) {
+        setSelectedCommune(lang === 'ar' ? communes[0].nameAr : communes[0].nameFr);
+      } else {
+        setSelectedCommune('');
+      }
+
       let fee = 400;
       if (shippingCompany === 'Yalidine Express') {
         fee = shippingType === 'Home' ? wil.yalidineHomeFee : wil.yalidineOfficeFee;
@@ -45,7 +77,7 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
       }
       setShippingFee(fee);
     }
-  }, [selectedWilayaCode, shippingCompany, shippingType]);
+  }, [selectedWilayaCode, shippingCompany, shippingType, lang]);
 
   const validateForm = () => {
     const errors: { [key: string]: string } = {};
@@ -60,6 +92,10 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
       errors.phone = t.errorPhone;
     } else if (!dzPhoneRegex.test(cleanPhone)) {
       errors.phone = t.errorPhone;
+    }
+
+    if (currentCommunes.length > 0 && !selectedCommune) {
+      errors.commune = lang === 'ar' ? 'يرجى اختيار البلدية' : 'Please select commune';
     }
 
     if (!address.trim()) {
@@ -80,11 +116,12 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
 
     setIsSubmitting(true);
 
-    // تجهيز البيانات بنفس الأسماء الموجودة في كود Google Apps Script
+    // 4. إرسال حقل البلدية "commune" إلى السكريبت ليدخل في الشيت وتليجرام
     const orderPayload = {
       name: customerName.trim(),
       phone: phoneNumber.trim().replace(/\s/g, ''),
       wilaya: `${selectedWilaya.code} - ${lang === 'ar' ? selectedWilaya.nameAr : selectedWilaya.nameFr}`,
+      commune: selectedCommune, // إرسال البلدية
       shippingCompany: shippingCompany,
       deliveryType: shippingType === 'Home' ? (lang === 'ar' ? 'للمنزل' : 'Home') : (lang === 'ar' ? 'المكتب' : 'Office'),
       address: address.trim(),
@@ -93,18 +130,15 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
     };
 
     try {
-      // ⚠️ ضع رابط الـ Web App الطويل الذي نسخته من جوجل مكان العبارة أدناه
-      const response = await fetch('https://script.google.com/macros/s/AKfycbyVfVYA3dxoENdrdVx8tzKVTP-__D2XzR2RclfPeVtHFBnbX8YNWkbl744Wqy81_PA/exec', {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbxHJg9tOCaqqdy3-3bC1IGVpfwlefMQgUFEMmmQFPx3h3H-8aVJhRhLFm5hBRAsc6o/exec', {
         method: 'POST',
-        mode: 'no-cors', // لتفادي مشاكل الـ CORS أثناء التطوير المحلي
+        mode: 'no-cors', 
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(orderPayload)
       });
 
-      // بما أننا نستخدم no-cors فلن نتمكن من قراءة استجابة الكود، ولكن عند الوصول لهذه النقطة بدون خطأ يعني أن الطلب أُرسل بنجاح
-      // نقوم بإنشاء كائن محلي لتمريره لـ دالة النجاح لتحديث واجهة الموقع للزبون
       const localOrder: Order = {
         id: Math.random().toString(36).substr(2, 9),
         customerName: orderPayload.name,
@@ -112,7 +146,7 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
         wilayaCode: selectedWilaya.code,
         wilayaNameAr: selectedWilaya.nameAr,
         wilayaNameFr: selectedWilaya.nameFr,
-        address: orderPayload.address,
+        address: selectedCommune ? `${selectedCommune} - ${orderPayload.address}` : orderPayload.address,
         shippingCompany: shippingCompany,
         shippingType: shippingType,
         shippingFee: shippingFee,
@@ -238,6 +272,35 @@ export default function CheckoutForm({ lang, onOrderSuccess }: CheckoutFormProps
             </div>
           </div>
         </div>
+
+        {/* 5. حقل اختيار البلدية الجديد (يظهر فقط عند اختيار ولاية تحتوي على بلديات مسجلة) */}
+        {currentCommunes.length > 0 && (
+          <div className="space-y-1.5 animate-fadeIn">
+            <label className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-[#B87333]" />
+              {lang === 'ar' ? 'البلدية / الدائرة' : 'Commune'} <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <select
+                value={selectedCommune}
+                onChange={(e) => setSelectedCommune(e.target.value)}
+                className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#B87333]/15 focus:border-[#B87333] outline-none appearance-none cursor-pointer pr-10 pl-10"
+              >
+                {currentCommunes.map((c) => (
+                  <option key={c.id} value={lang === 'ar' ? c.nameAr : c.nameFr}>
+                    {lang === 'ar' ? c.nameAr : c.nameFr}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[#B87333] pr-1.5">
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </div>
+            {validationErrors.commune && (
+              <p className="text-xs text-red-500 mt-1">{validationErrors.commune}</p>
+            )}
+          </div>
+        )}
 
         {/* Quantity selection */}
         <div className="space-y-2">
